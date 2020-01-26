@@ -102,3 +102,8 @@ dist
 
 # TernJS port file
 .tern-port
+
+config.json
+.eslintrc.json
+database.db
+package-lock.json

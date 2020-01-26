@@ -1,0 +1,26 @@
+{
+  "name": "yohobot3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dahazeyninja/YoHoBot3.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dahazeyninja/YoHoBot3/issues"
+  },
+  "homepage": "https://github.com/dahazeyninja/YoHoBot3#readme",
+  "dependencies": {
+    "feedparser": "^2.2.9",
+    "fluent-ffmpeg": "^2.1.2",
+    "parse-torrent": "^7.0.1",
+    "request": "^2.88.0",
+    "sqlite3": "^4.1.1"
+  }
+}
