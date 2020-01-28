@@ -24,7 +24,7 @@ function start(){
 
 		setTimeout(()=>{
 			start();
-		}, 300000);
+		}, config.rss.interval * 1000);
 	}
 }
 
