@@ -8,8 +8,8 @@ var working = false;
 
 function start(){
 	if (working === true) return;
-	if(config.transcoder){
-		qbt.login(config.qbittorrent.url, config.qbittorrent.user, config.qbittorrent.pass).then(()=>{
+	if(config.transcoder.enabled){
+		qbt.login(config.rss.qbittorrent.url, config.rss.qbittorrent.user, config.rss.qbittorrent.pass).then(()=>{
 			db.all('SELECT * FROM `hashes` ORDER BY `timestamp`', function(err, rows){
 				if(err) return console.error(err);
                 
@@ -33,7 +33,6 @@ function hashLoop(rows, i){
 		} else if (i < rows.length - 1){
 			hashLoop(rows, i + 1);
 		} else {
-			console.log('[Transcoder] No Torrents ready for transcode');
 			return setTimeout(()=>{
 				start();
 			},30000);
@@ -54,50 +53,33 @@ function getContents(row, data){
 // eslint-disable-next-line max-statements
 function transcode(row, data, filename){
 	const match = JSON.parse(row.match);
+	match.tc.filters.forEach((filter)=>{
+		
+	})	
 	const hash = row.hash;
 	const sourcefile = match.savepath + '/' + filename;
 	const escsourcefile = sourcefile.replace(':', '\\:');
 	const command = ffmpeg(sourcefile);
 	var timeout;
 
-	// console.log(row);
-	// console.log(data);
-	// console.log(match);
-	// console.log(filename);
-	// console.log('------------------------------------------------------------------------------------');
+	for(let i = 0; i < match.tc.filters.length; i++){
+		if(match.tc.filters[i].filter === 'subtitles' && match.tc.filters[i].options === 'source'){
+			match.tc.filters[i].options = '\'' + escsourcefile + '\''
+		}
+	}
 
-	command
-		.outputOptions([
+		command
+		.outputOptions(match.tc.options)
 
-			/* '-map 0',*/
-			'-c:v libx264',
-			'-preset ultrafast',
-			'-crf 18',
-			'-tune animation',
-			'-movflags +faststart',
-			'-profile:v high',
-			'-pix_fmt yuv420p',
-			'-level 4.1',
-			'-threads 0',
-			'-c:a copy',
-			'-strict',
-			'-2'])
-
-		.videoFilters([
-			{
-				filter: 'subtitles',
-				options: '\'' + escsourcefile + '\''
-			}
-		])
+		.videoFilters(match.tc.filters)
 
 		.on('start', function(commandLine){
 			console.log('[Transcoder] Spawned Ffmpeg with command: ' + commandLine);
 		})
 		.on('progress', function(progress) {
-			const percent = progress.percent.toString();
 
 			if (!timeout){
-				console.log('[Transcoder] Processing: ' + percent.slice(0, 4) + '% done; ' + progress.currentFps + ' FPS; ' + progress.currentKbps + ' kBps; ' + progress.targetSize + ' kB written');
+				console.log('[Transcoder] Processing: ' + progress.currentFps + ' FPS; ' + progress.currentKbps + ' kBps; ' + progress.targetSize + ' kB written; Timestamp: ' + progress.timemark + ' ');
 				timeout = true;
 				setTimeout(function(){
 					timeout = false;
@@ -113,14 +95,14 @@ function transcode(row, data, filename){
 			console.log('[Transcoder] Transcoding succeeded!');
 			db.run('DELETE FROM `hashes` WHERE `hash` = ?', [hash], function(err){
 				if (err){
-					console.log(err);
+					console.error(err);
 				}
+				working = false;
+				start();
 			});
-			working = false;
-			start();
 		})
 
-		.save('N://node/YohoBot2/test/' + filename + '.mp4');
+		.save('T://Transcoded/' + filename.slice(0,-4) + '.mp4');
 
 }
 
