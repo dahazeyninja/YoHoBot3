@@ -9,8 +9,8 @@ const parseTorrent = require('parse-torrent');
 var downloaded = [];
 
 function start(){
-	if(config.rss){
-		qbt.login(config.qbittorrent.url, config.qbittorrent.user, config.qbittorrent.pass).then(()=>{
+	if(config.rss.enabled){
+		qbt.login(config.rss.qbittorrent.url, config.rss.qbittorrent.user, config.rss.qbittorrent.pass).then(()=>{
 			db.all('SELECT * FROM `rss`', (err, rows) => {
 				if (err) return console.error(err);
 		
@@ -31,8 +31,8 @@ function start(){
 
 function getNextFeed(fi){
 
-	if (fi < config.feeds.length){
-		getFeed(config.feeds[fi]);
+	if (fi < config.rss.feeds.length){
+		getFeed(config.rss.feeds[fi]);
 		setTimeout(() => {
 			getNextFeed(fi + 1);
 		}, 3000);
@@ -132,7 +132,7 @@ function addTorrentLink(match, link, title, hash){
 	// console.log(typeof match.paused);
 
 	if (typeof match.paused === 'undefined'){
-		options.paused = config.qbittorrent.paused;
+		options.paused = config.rss.qbittorrent.paused;
 	} else {
 		options.paused = match.paused;
 	}
@@ -140,13 +140,13 @@ function addTorrentLink(match, link, title, hash){
 	if (match.savepath){
 		options.savepath = match.savepath;
 	} else {
-		options.savepath = config.qbittorrent.savepath;
+		options.savepath = config.rss.qbittorrent.savepath;
 	}
 
 	if (match.category){
 		options.category = match.category;
 	} else {
-		options.category = config.qbittorrent.category;
+		options.category = config.rss.qbittorrent.category;
 	}
 
 	// console.log(options);
@@ -161,7 +161,6 @@ function addTorrentLink(match, link, title, hash){
 }
 
 function checkTorrent(match, link, title, hash){
-	const matchstring = JSON.stringify(match);
 	let complete = false;
 
 	qbt.getTorrentList(null, function(list){
@@ -170,7 +169,7 @@ function checkTorrent(match, link, title, hash){
 				complete = true;
 				console.log('[RSS] Added ' + title + ' to qBittorrent');
 
-				torrentAdded(link, hash, matchstring);
+				torrentAdded(link, hash, match);
 			}
 		});
 	});
@@ -183,18 +182,24 @@ function checkTorrent(match, link, title, hash){
 	}, 1000);
 }
 
-function torrentAdded(link, hash, matchstring) {
+function torrentAdded(link, hash, match) {
 	downloaded.push(link);
 	db.run('INSERT INTO `rss` (link) VALUES (?);', [link], function (err) {
 		if (err) {
 			console.log(err);
 		}
 	});
-	db.run('INSERT INTO `hashes` (hash, match) VALUES (?, ?);', [hash, matchstring], function (err) {
-		if (err) {
-			console.log(err);
-		}
-	});
+
+	if(match.tc){
+		match.tc = config.transcoder.profiles[match.tc];
+		const matchstring = JSON.stringify(match);
+		db.run('INSERT INTO `hashes` (hash, match) VALUES (?, ?);', [hash, matchstring], function (err) {
+			if (err) {
+				console.log(err);
+			}
+		});
+	}
+	
 }
 
 start();
