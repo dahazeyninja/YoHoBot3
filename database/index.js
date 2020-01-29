@@ -14,7 +14,7 @@ db.serialize(function(){
 		console.log('[Database] Hash Database Ready!');
 	});
 
-	db.run('CREATE TABLE IF NOT EXISTS `transcoded` (`filename` TEXT, `path` TEXT, `match` TEXT);', (err)=>{
+	db.run('CREATE TABLE IF NOT EXISTS `transcoded` (`filename` TEXT, `match` TEXT);', (err)=>{
 		if(err) return console.error(err);
 
 		console.log('[Database] Renamer Database Ready!');
