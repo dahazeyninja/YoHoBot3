@@ -102,7 +102,7 @@ function transcode(row, data, filename){
 			});
 		})
 
-		.save('T://Transcoded/' + filename.slice(0,-4) + '.mp4');
+		.save(config.transcoder.directory + filename.slice(0,-4) + '.mp4');
 
 }
 
