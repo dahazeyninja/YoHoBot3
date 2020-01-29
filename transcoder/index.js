@@ -53,6 +53,7 @@ function getContents(row, data){
 // eslint-disable-next-line max-statements
 function transcode(row, data, filename){
 	const match = JSON.parse(row.match);
+	const new_filename = filename.slice(0,-4) + '.mp4'
 	match.tc.filters.forEach((filter)=>{
 		
 	})	
@@ -100,9 +101,12 @@ function transcode(row, data, filename){
 				working = false;
 				start();
 			});
+			db.run('INSERT INTO `transcoded` (filename, match) VALUES (?,?);', (new_filename, match),(err)=>{
+				if(err) return console.error(err);
+			})
 		})
 
-		.save(config.transcoder.directory + filename.slice(0,-4) + '.mp4');
+		.save(config.transcoder.directory + new_filename);
 
 }
 
