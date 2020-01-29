@@ -19,6 +19,7 @@
   "dependencies": {
     "feedparser": "^2.2.9",
     "fluent-ffmpeg": "^2.1.2",
+    "node-tvdb": "^4.1.0",
     "parse-torrent": "^7.0.1",
     "request": "^2.88.0",
     "sqlite3": "^4.1.1"
