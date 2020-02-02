@@ -35,13 +35,14 @@ function getNextFeed(fi){
 		getFeed(config.rss.feeds[fi]);
 		setTimeout(() => {
 			getNextFeed(fi + 1);
-		}, 3000);
+		}, 5000);
 	}
 }
 
 function getFeed(feed){
 	var req = request(feed.url);
 	var feedparser = new FeedParser();
+	const items = [];
 
 	req.on('error', function (error){
 		console.error(feed.url, error);
@@ -58,6 +59,10 @@ function getFeed(feed){
 		}
 	});
 
+	req.on('end', (res)=>{
+		itemLoop(items, feed, 0);
+	})
+
 	feedparser.on('error', function(error){
 		console.error(error);
 	});
@@ -69,9 +74,23 @@ function getFeed(feed){
 		var item;
 
 		while (item = stream.read()){
-			matchItem(item, feed);
+			items.push({
+				title: item.title,
+				link: item.link
+			});
+			// matchItem(item, feed);
 		}
 	});
+}
+
+function itemLoop(items, feed, i){
+	matchItem(items[i], feed);
+	setTimeout(()=>{
+		i++;
+		if(i < items.length){
+			itemLoop(items, feed, i);
+		}
+	}, 1000)
 }
 
 function matchItem(item, feed){
@@ -155,7 +174,7 @@ function addTorrentLink(match, link, title, hash){
 		// console.log(res, hash);
 		setTimeout(() => {
 			checkTorrent(match, link, title, hash);
-		}, 5000);
+		}, 1000);
 
 	});
 }
@@ -191,7 +210,7 @@ function torrentAdded(link, hash, match) {
 	});
 
 	if(match.tc){
-		match.tc = config.transcoder.profiles[match.tc];
+		match.tcp = config.transcoder.profiles[match.tc];
 		const matchstring = JSON.stringify(match);
 		db.run('INSERT INTO `hashes` (hash, match) VALUES (?, ?);', [hash, matchstring], function (err) {
 			if (err) {
