@@ -53,26 +53,23 @@ function getContents(row, data){
 // eslint-disable-next-line max-statements
 function transcode(row, data, filename){
 	const match = JSON.parse(row.match);
-	const new_filename = filename.slice(0,-4) + '.mp4'
-	match.tc.filters.forEach((filter)=>{
-		
-	})	
+	const new_filename = filename.slice(0,-4) + '.mp4';
 	const hash = row.hash;
-	const sourcefile = match.savepath + '/' + filename;
+	const sourcefile = match.savepath + filename;
 	const escsourcefile = sourcefile.replace(':', '\\:');
 	const command = ffmpeg(sourcefile);
 	var timeout;
 
-	for(let i = 0; i < match.tc.filters.length; i++){
-		if(match.tc.filters[i].filter === 'subtitles' && match.tc.filters[i].options === 'source'){
-			match.tc.filters[i].options = '\'' + escsourcefile + '\''
+	for(let i = 0; i < match.tcp.filters.length; i++){
+		if(match.tcp.filters[i].filter === 'subtitles' && match.tcp.filters[i].options === 'source'){
+			match.tcp.filters[i].options = '\'' + escsourcefile + '\''
 		}
 	}
 
 		command
-		.outputOptions(match.tc.options)
+		.outputOptions(match.tcp.options)
 
-		.videoFilters(match.tc.filters)
+		.videoFilters(match.tcp.filters)
 
 		.on('start', function(commandLine){
 			console.log('[Transcoder] Spawned Ffmpeg with command: ' + commandLine);
@@ -91,6 +88,9 @@ function transcode(row, data, filename){
 		.on('error', function(err, stdout, stderr) {
 			console.log('[Transcoder] Cannot process video: ' + err.message + '\n' + stdout + '\n' + stderr);
 			console.error(err);
+			if(err.includes('Failed to inject frame into filter network: No such file or directory')){
+				console.log('spaces smh');
+			}
 		})
 		.on('end', function(stdout, stderr) {
 			console.log('[Transcoder] Transcoding succeeded!');
@@ -101,7 +101,7 @@ function transcode(row, data, filename){
 				working = false;
 				start();
 			});
-			db.run('INSERT INTO `transcoded` (filename, match) VALUES (?,?);', (new_filename, match),(err)=>{
+			db.run('INSERT INTO `transcoded` (filename, match) VALUES (?,?);', [new_filename, JSON.stringify(match)],(err)=>{
 				if(err) return console.error(err);
 			})
 		})
