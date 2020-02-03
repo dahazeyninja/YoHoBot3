@@ -26,11 +26,18 @@ function start(){
 }
 
 function hashLoop(rows, i){
-	qbt.getTorrentProperties(rows[i].hash, function(data){
-		if (data.completion_date > -1){
+	qbt.getTorrentProperties(rows[i].hash, async function(err, data){
+		if(err && err.status == 404){
+			await removeHashEntry(rows[i].hash)
+				.catch(err=>console.error(err));
+		} else if (err) return console.error(err);
+
+		if (data && data.completion_date > -1){
 			working = true;
-			getContents(rows[i], data);
-		} else if (i < rows.length - 1){
+			return getContents(rows[i], data);
+		}
+		
+		if (i < rows.length - 1){
 			hashLoop(rows, i + 1);
 		} else {
 			return setTimeout(()=>{
@@ -108,6 +115,16 @@ function transcode(row, data, filename){
 
 		.save(config.transcoder.directory + new_filename);
 
+}
+
+function removeHashEntry(hash){
+	return new Promise((resolve, reject)=>{
+		db.run('DELETE FROM `hashes` WHERE hash = ?;', hash, (err)=>{
+			if(err) return reject(err);
+
+			resolve();
+		})
+	})
 }
 
 start();
