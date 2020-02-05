@@ -85,7 +85,7 @@ async function filesLoop(files, i){
 	// const start = Date.now()
 	// console.log(start);
 
-	fs.copyFile(source, destination)
+	fs.rename(source, destination)
 		.then(()=> {
 			console.log(`[Renamer] Renamed ${source} to ${destination}`);
 			finishedRename(files, i);
@@ -97,7 +97,7 @@ async function filesLoop(files, i){
 			fs.mkdir(`${directory}${show_dir}/${season_dir}`, {recursive:true})
 				.then(()=>{
 					console.log(`[Renamer] Successfully created ${directory}${show_dir}/${season_dir}`);
-					fs.copyFile(source, destination)
+					fs.rename(source, destination)
 						.then(()=>{
 							console.log(`[Renamer] Renamed ${source} to ${destination}`);
 							finishedRename(files, i);
