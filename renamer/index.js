@@ -77,8 +77,14 @@ async function filesLoop(files, i){
 	const show_dir = `${show} [tvdb-${match.tvdbId}]`;
 	const season_dir = `Season ${season.toString().padStart(2,'0')}`;
 	const ep_filename = `${show} - S${season.toString().padStart(2,'0')}E${ep_num.toString().padStart(2,'0')} - ${ep_name}.${ext}`;
+	const ep_sfilename = `${show} - S${season.toString().padStart(2,'0')}E${ep_num.toString().padStart(2,'0')}.${ext}`;
 	const source = config.transcoder.directory + filename;
-	const destination = `${directory}${show_dir}/${season_dir}/${ep_filename}`;
+	let destination;
+	destination = `${directory}${show_dir}/${season_dir}/${ep_filename}`;
+	if (destination.length > 255){
+		destination = `${directory}${show_dir}/${season_dir}/${ep_sfilename}`
+	}
+	
 	//console.log(`Source: ${source}`)
 	//console.log(`Destination: ${destination}`)
 
