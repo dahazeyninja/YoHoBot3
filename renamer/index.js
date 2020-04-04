@@ -70,9 +70,9 @@ async function filesLoop(files, i){
 		}
 	})
 
-	/*if(!ep_name || ep_name.length > 50){
+	if(!ep_name){
 		ep_name = `Episode ${ep_num.toString().padStart(2,'0')}`;
-	}*/ 
+	}
 
 	const show_dir = `${show} [tvdb-${match.tvdbId}]`;
 	const season_dir = `Season ${season.toString().padStart(2,'0')}`;
