@@ -90,12 +90,13 @@ function itemLoop(items, feed, i){
 		if(i < items.length){
 			itemLoop(items, feed, i);
 		}
-	}, 1000)
+	}, 3000)
 }
 
 function matchItem(item, feed){
 	const {title} = item;
 	const {link} = item;
+	let matched = false;
 
 	// eslint-disable-next-line max-statements
 	feed.matches.forEach(function(match){
@@ -108,7 +109,8 @@ function matchItem(item, feed){
 			}
 		}
 
-		if (valid && downloaded.indexOf(link) == -1){
+		if (valid && !matched && downloaded.indexOf(link) == -1){
+			matched = true;
 			console.log('[RSS] Matched: ' + title);
 			sortLink(match, title, link);
 		}
