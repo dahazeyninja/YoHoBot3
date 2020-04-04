@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database('database.db');
 const qbt = require('../qbit-api');
 const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs').promises;
 const config = require('../config.json');
 var working = false;
 
@@ -58,22 +59,25 @@ function getContents(row, data){
 }
 
 // eslint-disable-next-line max-statements
-function transcode(row, data, filename){
+async function transcode(row, data, filename){
 	const match = JSON.parse(row.match);
 	const new_filename = filename.slice(0,-4) + '.mp4';
 	const hash = row.hash;
-	const sourcefile = match.savepath + filename;
-	const escsourcefile = sourcefile.replace(':', '\\:');
-	const command = ffmpeg(sourcefile);
+	const ogsourcefile = match.savepath + filename;
+	// const newsourcefilename = filename.replace(/\s/g, '_');
+	const newsourcefile = match.savepath + 'target.mkv';
+	await fs.rename(ogsourcefile, newsourcefile);
+	const escsourcefile = newsourcefile.replace(/\\/g, '/').replace(':', '\\:');
+	const command = ffmpeg(newsourcefile);
 	var timeout;
 
 	for(let i = 0; i < match.tcp.filters.length; i++){
 		if(match.tcp.filters[i].filter === 'subtitles' && match.tcp.filters[i].options === 'source'){
-			match.tcp.filters[i].options = '\'' + escsourcefile + '\''
+			match.tcp.filters[i].options = '\'' + escsourcefile + '\'';
 		}
 	}
 
-		command
+	command
 		.outputOptions(match.tcp.options)
 
 		.videoFilters(match.tcp.filters)
@@ -95,12 +99,10 @@ function transcode(row, data, filename){
 		.on('error', function(err, stdout, stderr) {
 			console.log('[Transcoder] Cannot process video: ' + err.message + '\n' + stdout + '\n' + stderr);
 			console.error(err);
-			if(err.includes('Failed to inject frame into filter network: No such file or directory')){
-				console.log('spaces smh');
-			}
 		})
-		.on('end', function(stdout, stderr) {
+		.on('end', function() {
 			console.log('[Transcoder] Transcoding succeeded!');
+			fs.rename(newsourcefile, ogsourcefile);
 			db.run('DELETE FROM `hashes` WHERE `hash` = ?', [hash], function(err){
 				if (err){
 					console.error(err);
@@ -110,7 +112,7 @@ function transcode(row, data, filename){
 			});
 			db.run('INSERT INTO `transcoded` (filename, match) VALUES (?,?);', [new_filename, JSON.stringify(match)],(err)=>{
 				if(err) return console.error(err);
-			})
+			});
 		})
 
 		.save(config.transcoder.directory + new_filename);
@@ -123,8 +125,8 @@ function removeHashEntry(hash){
 			if(err) return reject(err);
 
 			resolve();
-		})
-	})
+		});
+	});
 }
 
 start();
