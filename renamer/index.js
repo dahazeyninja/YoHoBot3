@@ -65,7 +65,7 @@ async function filesLoop(files, i){
 	const show = data.seriesName.replace(/[\\\/\:\?\*\"\<\>\|]/g, '');
 
 	data.episodes.forEach((episode)=>{
-		if(episode.airedSeason == season && episode.airedEpisodeNumber == ep_num){
+		if(episode.episodeName && episode.airedSeason == season && episode.airedEpisodeNumber == ep_num){
 			ep_name = episode.episodeName.replace(/[\\\/\:\?\*\"\<\>\|]/g, '');
 		}
 	})
